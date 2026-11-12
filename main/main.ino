@@ -172,7 +172,10 @@ void loop(){
   double dBFS = 20 * log10(loud / 8388608);
   double dB = 94 + 26 + dBFS;
 
+  if (dB - buffer.getAvg() > 10)
+    buffer.push(dB);
   buffer.push(dB);
+
 
   int avg = buffer.getAvg();
   SoundState state = parseData(avg);
