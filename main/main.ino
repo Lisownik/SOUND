@@ -3,6 +3,8 @@
 #include <driver/i2s.h>
 #include <format>
 #include <cmath>
+#include "../lib/ringBuffer.h"
+
 enum class SoundState {
   BAD,
   MEDIUM,
@@ -141,6 +143,8 @@ LedRing redRing{0xFF0000, 2, 24};
 LedRing greenRing{0x00FF00, 2, 24};
 LedRing yellowRing{0xAFFF00, 2, 24};
 
+RingBuffer buffer{20, 50};
+
 void setup(){
   Serial.begin(9600);
   Serial.println("S.O.U.N.D. Firmware Started!"); 
@@ -167,8 +171,11 @@ void loop(){
   double loud = calculateLoudness();
   double dBFS = 20 * log10(loud / 8388608);
   double dB = 94 + 26 + dBFS;
-  
-  SoundState state = parseData(dB);
+
+  buffer.push(dB);
+
+  int avg = buffer.getAvg();
+  SoundState state = parseData(avg);
   if(state == SoundState::BAD){
     yellowRing.lightOff();
     greenRing.lightOff();
@@ -184,7 +191,9 @@ void loop(){
     yellowRing.lightOff();
     greenRing.lightOn();
   }
+
   Serial.println(dB);
+  Serial.println(avg);
   Serial.println((int)state);
 
 
